@@ -1,0 +1,4 @@
+[submodule "scramjet"]
+	path = scramjet
+	url = https://github.com/MercuryWorkshop/scramjet.git
+	branch = main
