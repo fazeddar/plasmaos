@@ -290,6 +290,31 @@
             <span id="mp3ModeLabel" class="mp3-mode-chip">mode: mp3</span>
           </div>
           <canvas id="mp3VisualizerCanvas" class="mp3-visualizer" width="640" height="140" aria-label="Music visualizer"></canvas>
+          <div class="mp3-collections">
+            <section class="mp3-collection-panel">
+              <div class="mp3-collection-head">
+                <strong>Music Library</strong>
+                <span>Tracks in ~/Music</span>
+              </div>
+              <div id="mp3LibraryList" class="mp3-list"></div>
+            </section>
+            <section class="mp3-collection-panel">
+              <div class="mp3-collection-head">
+                <strong>Playlists</strong>
+                <div class="mp3-playlist-create-row">
+                  <input id="mp3PlaylistNameInput" type="text" maxlength="24" placeholder="New playlist" />
+                  <button id="mp3PlaylistCreateButton" type="button" class="action-button">Create</button>
+                </div>
+              </div>
+              <div id="mp3PlaylistList" class="mp3-list"></div>
+              <div id="mp3PlaylistStatus" class="mp3-playlist-status">No playlist selected</div>
+              <div class="mp3-playlist-actions">
+                <button id="mp3PlaylistAddButton" type="button" class="action-button">Add Track</button>
+                <button id="mp3PlaylistPlayButton" type="button" class="action-button primary">Play Playlist</button>
+                <button id="mp3PlaylistDeleteButton" type="button" class="action-button">Delete</button>
+              </div>
+            </section>
+          </div>
         </div>
       </section>
 

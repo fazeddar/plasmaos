@@ -194,6 +194,14 @@ const mp3TimeLabel = document.getElementById("mp3TimeLabel");
 const mp3TrackLabel = document.getElementById("mp3TrackLabel");
 const mp3ModeLabel = document.getElementById("mp3ModeLabel");
 const mp3VisualizerCanvas = document.getElementById("mp3VisualizerCanvas");
+const mp3LibraryList = document.getElementById("mp3LibraryList");
+const mp3PlaylistList = document.getElementById("mp3PlaylistList");
+const mp3PlaylistNameInput = document.getElementById("mp3PlaylistNameInput");
+const mp3PlaylistCreateButton = document.getElementById("mp3PlaylistCreateButton");
+const mp3PlaylistAddButton = document.getElementById("mp3PlaylistAddButton");
+const mp3PlaylistPlayButton = document.getElementById("mp3PlaylistPlayButton");
+const mp3PlaylistDeleteButton = document.getElementById("mp3PlaylistDeleteButton");
+const mp3PlaylistStatus = document.getElementById("mp3PlaylistStatus");
 const soundScopeCanvas = document.getElementById("soundScopeCanvas");
 const soundScopeStatus = document.getElementById("soundScopeStatus");
 
@@ -242,6 +250,62 @@ let cloudConfig = {
   url: "",
   anonKey: "",
 };
+
+const musicStateStorageKey = "plasma-music-state-v1";
+const musicFilePattern = /\.(mp3|m4a|ogg|wav|flac)$/i;
+
+let musicPlaybackQueue = {
+  playlistName: "",
+  trackPaths: [],
+  currentIndex: -1,
+};
+
+let musicState = loadMusicState();
+
+function loadMusicState() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(musicStateStorageKey) || "null");
+    if (!parsed || typeof parsed !== "object") {
+      return {
+        selectedTrackPath: "",
+        selectedPlaylistName: "",
+        playlists: [],
+      };
+    }
+
+    return {
+      selectedTrackPath: typeof parsed.selectedTrackPath === "string" ? parsed.selectedTrackPath : "",
+      selectedPlaylistName: typeof parsed.selectedPlaylistName === "string" ? parsed.selectedPlaylistName : "",
+      playlists: Array.isArray(parsed.playlists)
+        ? parsed.playlists
+            .map((playlist) => ({
+              name: normalizeUsername(playlist?.name || ""),
+              trackPaths: Array.isArray(playlist?.trackPaths)
+                ? playlist.trackPaths.filter((trackPath) => typeof trackPath === "string" && trackPath)
+                : [],
+            }))
+            .filter((playlist) => playlist.name)
+        : [],
+    };
+  } catch {
+    return {
+      selectedTrackPath: "",
+      selectedPlaylistName: "",
+      playlists: [],
+    };
+  }
+}
+
+function saveMusicState() {
+  localStorage.setItem(
+    musicStateStorageKey,
+    JSON.stringify({
+      selectedTrackPath: musicState.selectedTrackPath,
+      selectedPlaylistName: musicState.selectedPlaylistName,
+      playlists: musicState.playlists,
+    })
+  );
+}
 
 const terminalState = {
   username: "plasma",
@@ -373,7 +437,8 @@ const terminalFiles = new Map([
 ]);
 
 const filesHomePath = "/home/plasma";
-const filesTree = new Map([
+const filesStorageKey = "plasma-files-tree-v1";
+const defaultFilesTree = new Map([
   ["/", [{ name: "home", type: "folder" }]],
   ["/home", [{ name: "plasma", type: "folder" }]],
   [
@@ -397,6 +462,8 @@ const filesTree = new Map([
   ["/home/plasma/Videos", []],
   ["/home/plasma/Trash", []],
 ]);
+
+let filesTree = loadFilesTreeFromStorage();
 
 const filesState = {
   currentPath: filesHomePath,
@@ -633,6 +700,54 @@ function showToast(message) {
 
 function normalizeUsername(rawValue = "") {
   return rawValue.trim().replace(/\s+/g, " ").slice(0, 24);
+}
+
+function cloneFilesTreeMap(sourceTree) {
+  const nextTree = new Map();
+  sourceTree.forEach((entries, path) => {
+    nextTree.set(path, Array.isArray(entries) ? entries.map((entry) => ({ ...entry })) : []);
+  });
+  return nextTree;
+}
+
+function loadFilesTreeFromStorage() {
+  try {
+    const rawValue = localStorage.getItem(filesStorageKey);
+    if (!rawValue) {
+      return cloneFilesTreeMap(defaultFilesTree);
+    }
+
+    const parsed = JSON.parse(rawValue);
+    if (!Array.isArray(parsed)) {
+      return cloneFilesTreeMap(defaultFilesTree);
+    }
+
+    const nextTree = new Map();
+    parsed.forEach((entry) => {
+      if (!Array.isArray(entry) || entry.length !== 2) {
+        return;
+      }
+      const [path, entries] = entry;
+      if (typeof path !== "string" || !Array.isArray(entries)) {
+        return;
+      }
+      nextTree.set(path, entries.map((item) => ({ ...item })));
+    });
+
+    defaultFilesTree.forEach((entries, path) => {
+      if (!nextTree.has(path)) {
+        nextTree.set(path, entries.map((entry) => ({ ...entry })));
+      }
+    });
+
+    return nextTree;
+  } catch {
+    return cloneFilesTreeMap(defaultFilesTree);
+  }
+}
+
+function saveFilesTreeToStorage() {
+  localStorage.setItem(filesStorageKey, JSON.stringify(Array.from(filesTree.entries())));
 }
 
 function setCloudStatus(message) {
@@ -1528,7 +1643,296 @@ function updateMp3ModeLabel() {
   if (!mp3ModeLabel) {
     return;
   }
-  mp3ModeLabel.textContent = audioState.soundModeEnabled ? "mode: sound" : "mode: mp3";
+  if (audioState.soundModeEnabled) {
+    mp3ModeLabel.textContent = "mode: sound";
+    return;
+  }
+
+  if (musicPlaybackQueue.playlistName) {
+    mp3ModeLabel.textContent = `playlist: ${musicPlaybackQueue.playlistName}`;
+    return;
+  }
+
+  mp3ModeLabel.textContent = "mode: mp3";
+}
+
+function getPlaylistByName(name) {
+  return musicState.playlists.find((playlist) => playlist.name === name) || null;
+}
+
+function getAudioTrackEntries(path = filesHomePath, results = []) {
+  if (!filesPathExists(path)) {
+    return results;
+  }
+
+  filesGetEntries(path).forEach((entry) => {
+    const nextPath = filesJoinPath(path, entry.name);
+    if (entry.type === "folder") {
+      getAudioTrackEntries(nextPath, results);
+      return;
+    }
+
+    if (entry.type === "file" && (entry.mime?.startsWith("audio/") || musicFilePattern.test(entry.name))) {
+      results.push({
+        path: nextPath,
+        name: entry.name,
+        mime: entry.mime || "audio/mpeg",
+      });
+    }
+  });
+
+  return results;
+}
+
+function getTrackSourceFromEntry(entry) {
+  if (!entry) {
+    return "";
+  }
+
+  if (typeof entry.dataUrl === "string" && entry.dataUrl.startsWith("data:")) {
+    return entry.dataUrl;
+  }
+
+  if (typeof entry.content === "string" && entry.content.startsWith("data:")) {
+    return entry.content;
+  }
+
+  return "";
+}
+
+function renderMusicLibrary() {
+  if (!mp3LibraryList) {
+    return;
+  }
+
+  const tracks = getAudioTrackEntries();
+  mp3LibraryList.innerHTML = "";
+
+  if (!tracks.length) {
+    const empty = document.createElement("div");
+    empty.className = "mp3-empty-state";
+    empty.textContent = "Add MP3 files to ~/Music to populate the library.";
+    mp3LibraryList.appendChild(empty);
+    return;
+  }
+
+  tracks.forEach((track) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "mp3-library-item";
+    button.textContent = track.name;
+    button.classList.toggle("selected", musicState.selectedTrackPath === track.path);
+    button.addEventListener("click", () => {
+      void loadTrackFromLibrary(track.path, true);
+    });
+    mp3LibraryList.appendChild(button);
+  });
+}
+
+function renderMusicPlaylists() {
+  if (!mp3PlaylistList) {
+    return;
+  }
+
+  mp3PlaylistList.innerHTML = "";
+
+  if (!musicState.playlists.length) {
+    const empty = document.createElement("div");
+    empty.className = "mp3-empty-state";
+    empty.textContent = "Create a playlist to group tracks.";
+    mp3PlaylistList.appendChild(empty);
+  } else {
+    musicState.playlists.forEach((playlist) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "mp3-playlist-item";
+      button.classList.toggle("selected", musicState.selectedPlaylistName === playlist.name);
+      button.textContent = `${playlist.name} (${playlist.trackPaths.length})`;
+      button.addEventListener("click", () => {
+        musicState.selectedPlaylistName = playlist.name;
+        saveMusicState();
+        renderMusicPlaylists();
+      });
+      button.addEventListener("dblclick", () => {
+        musicState.selectedPlaylistName = playlist.name;
+        saveMusicState();
+        renderMusicPlaylists();
+        void playPlaylist(playlist.name);
+      });
+      mp3PlaylistList.appendChild(button);
+    });
+  }
+
+  if (mp3PlaylistStatus) {
+    const playlist = getPlaylistByName(musicState.selectedPlaylistName);
+    mp3PlaylistStatus.textContent = playlist
+      ? `${playlist.name}: ${playlist.trackPaths.length} track${playlist.trackPaths.length === 1 ? "" : "s"}`
+      : "No playlist selected";
+  }
+
+  if (mp3PlaylistAddButton) {
+    mp3PlaylistAddButton.disabled = !musicState.selectedTrackPath || !getPlaylistByName(musicState.selectedPlaylistName);
+  }
+  if (mp3PlaylistPlayButton) {
+    mp3PlaylistPlayButton.disabled = !getPlaylistByName(musicState.selectedPlaylistName);
+  }
+  if (mp3PlaylistDeleteButton) {
+    mp3PlaylistDeleteButton.disabled = !getPlaylistByName(musicState.selectedPlaylistName);
+  }
+}
+
+function refreshMusicPanels() {
+  renderMusicLibrary();
+  renderMusicPlaylists();
+  updateMp3ModeLabel();
+}
+
+async function loadTrackFromLibrary(trackPath, autoplay = false, preserveQueue = false) {
+  const resolved = filesResolveEntry(trackPath, filesHomePath);
+  if (!resolved || resolved.entry.type !== "file") {
+    showToast("Track not found");
+    return false;
+  }
+
+  const sourceUrl = getTrackSourceFromEntry(resolved.entry);
+  if (!sourceUrl) {
+    showToast("That file does not contain playable audio yet");
+    return false;
+  }
+
+  if (!preserveQueue) {
+    musicPlaybackQueue = {
+      playlistName: "",
+      trackPaths: [],
+      currentIndex: -1,
+    };
+  }
+
+  musicState.selectedTrackPath = trackPath;
+  saveMusicState();
+
+  mp3AudioElement.src = sourceUrl;
+  if (mp3TrackLabel) {
+    mp3TrackLabel.textContent = resolved.entry.name;
+  }
+
+  updatePlayerWidgetDetails();
+  updateMp3TimeDisplay();
+  refreshMusicPanels();
+
+  if (autoplay) {
+    try {
+      await ensureMp3AnalyserReady();
+      await mp3AudioElement.play();
+      syncMp3PlayButtonLabels();
+      startVisualizerLoop();
+    } catch {
+      syncMp3PlayButtonLabels();
+      showToast("Track loaded");
+    }
+  }
+
+  return true;
+}
+
+function addTrackToSelectedPlaylist() {
+  const playlist = getPlaylistByName(musicState.selectedPlaylistName);
+  if (!playlist) {
+    showToast("Select a playlist first");
+    return;
+  }
+
+  if (!musicState.selectedTrackPath) {
+    showToast("Select a track first");
+    return;
+  }
+
+  if (!playlist.trackPaths.includes(musicState.selectedTrackPath)) {
+    playlist.trackPaths.push(musicState.selectedTrackPath);
+    saveMusicState();
+    renderMusicPlaylists();
+    showToast(`Added track to ${playlist.name}`);
+    return;
+  }
+
+  showToast("Track already exists in that playlist");
+}
+
+function createMusicPlaylist() {
+  const enteredName = normalizeUsername(mp3PlaylistNameInput?.value || "");
+  if (!enteredName) {
+    return;
+  }
+
+  if (getPlaylistByName(enteredName)) {
+    showToast("Playlist already exists");
+    return;
+  }
+
+  musicState.playlists.push({ name: enteredName, trackPaths: [] });
+  musicState.selectedPlaylistName = enteredName;
+  saveMusicState();
+  renderMusicPlaylists();
+  if (mp3PlaylistNameInput) {
+    mp3PlaylistNameInput.value = "";
+  }
+  showToast(`Created playlist ${enteredName}`);
+}
+
+async function playPlaylist(name) {
+  const playlist = getPlaylistByName(name);
+  if (!playlist || !playlist.trackPaths.length) {
+    showToast("That playlist has no tracks yet");
+    return;
+  }
+
+  musicPlaybackQueue = {
+    playlistName: playlist.name,
+    trackPaths: [...playlist.trackPaths],
+    currentIndex: 0,
+  };
+
+  const nextPath = musicPlaybackQueue.trackPaths[0];
+  const loaded = await loadTrackFromLibrary(nextPath, true, true);
+  if (loaded) {
+    musicPlaybackQueue.currentIndex = 0;
+    updateMp3ModeLabel();
+  }
+}
+
+async function advancePlaybackQueue() {
+  if (!musicPlaybackQueue.trackPaths.length) {
+    updateMp3ModeLabel();
+    return;
+  }
+
+  const nextIndex = musicPlaybackQueue.currentIndex + 1;
+  if (nextIndex >= musicPlaybackQueue.trackPaths.length) {
+    musicPlaybackQueue = {
+      playlistName: "",
+      trackPaths: [],
+      currentIndex: -1,
+    };
+    updateMp3ModeLabel();
+    return;
+  }
+
+  musicPlaybackQueue.currentIndex = nextIndex;
+  await loadTrackFromLibrary(musicPlaybackQueue.trackPaths[nextIndex], true, true);
+}
+
+function deleteSelectedPlaylist() {
+  const playlist = getPlaylistByName(musicState.selectedPlaylistName);
+  if (!playlist) {
+    showToast("Select a playlist first");
+    return;
+  }
+
+  musicState.playlists = musicState.playlists.filter((item) => item.name !== playlist.name);
+  musicState.selectedPlaylistName = musicState.playlists[0]?.name || "";
+  saveMusicState();
+  renderMusicPlaylists();
+  showToast(`Deleted playlist ${playlist.name}`);
 }
 
 function stopSoundMode() {
@@ -2414,13 +2818,20 @@ function initializeMp3Player() {
     if (!file) {
       return;
     }
-    const objectUrl = URL.createObjectURL(file);
+    const objectUrl = await fileToDataUrl(file);
+    musicPlaybackQueue = {
+      playlistName: "",
+      trackPaths: [],
+      currentIndex: -1,
+    };
+    musicState.selectedTrackPath = "";
     mp3AudioElement.src = objectUrl;
     if (mp3TrackLabel) {
       mp3TrackLabel.textContent = file.name;
     }
     updatePlayerWidgetDetails();
     updateMp3TimeDisplay();
+    refreshMusicPanels();
 
     try {
       await ensureMp3AnalyserReady();
@@ -2473,11 +2884,39 @@ function initializeMp3Player() {
   mp3AudioElement.addEventListener("ended", () => {
     syncMp3PlayButtonLabels();
     updateMp3TimeDisplay();
+    void advancePlaybackQueue();
+  });
+
+  mp3PlaylistCreateButton?.addEventListener("click", () => {
+    createMusicPlaylist();
+  });
+
+  mp3PlaylistNameInput?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      createMusicPlaylist();
+    }
+  });
+
+  mp3PlaylistAddButton?.addEventListener("click", () => {
+    addTrackToSelectedPlaylist();
+  });
+
+  mp3PlaylistPlayButton?.addEventListener("click", () => {
+    const playlist = getPlaylistByName(musicState.selectedPlaylistName);
+    if (playlist) {
+      void playPlaylist(playlist.name);
+    }
+  });
+
+  mp3PlaylistDeleteButton?.addEventListener("click", () => {
+    deleteSelectedPlaylist();
   });
 
   updateMp3TimeDisplay();
   updateMp3ModeLabel();
   syncMp3PlayButtonLabels();
+  refreshMusicPanels();
   startVisualizerLoop();
 }
 
@@ -2861,6 +3300,15 @@ function filesHumanSize(size = 0) {
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(reader.error || new Error("Unable to read file"));
+    reader.readAsDataURL(file);
+  });
+}
+
 function filesHasName(path, name) {
   return filesGetEntries(path).some((entry) => entry.name === name);
 }
@@ -2942,7 +3390,8 @@ function renderFilesPreview(entries) {
         return;
       }
 
-      const textPreview = (selected.content || "").slice(0, 520);
+      const canPreviewText = typeof selected.content === "string" && !selected.content.startsWith("data:") && (selected.mime || "").startsWith("text/");
+      const textPreview = canPreviewText ? selected.content.slice(0, 520) : "";
       filesPreviewPanel.textContent = [
         `Name: ${selected.name}`,
         `Type: file`,
@@ -3151,6 +3600,7 @@ function filesCreateFolder(nameInput = "") {
   filesState.selectedEntryName = nextName;
   filesState.selectedEntryType = "folder";
   renderFilesGrid();
+  saveFilesTreeToStorage();
   showToast(`Created folder ${nextName}`);
 }
 
@@ -3174,6 +3624,7 @@ function filesCreateTextFile(nameInput = "") {
   filesState.selectedEntryName = nextName;
   filesState.selectedEntryType = "file";
   renderFilesGrid();
+  saveFilesTreeToStorage();
   showToast(`Created file ${nextName}`);
 }
 
@@ -3242,6 +3693,7 @@ function filesRenameSelected() {
   selected.name = nextName;
   filesState.selectedEntryName = nextName;
   renderFilesGrid();
+  saveFilesTreeToStorage();
   showToast("Renamed item");
 }
 
@@ -3266,6 +3718,7 @@ function filesDeleteSelected() {
   filesState.selectedEntryName = "";
   filesState.selectedEntryType = "";
   renderFilesGrid();
+  saveFilesTreeToStorage();
   showToast(`Deleted ${removed.name}`);
 }
 
@@ -3331,6 +3784,7 @@ function filesMoveSelected() {
   filesState.selectedEntryName = "";
   filesState.selectedEntryType = "";
   renderFilesGrid();
+  saveFilesTreeToStorage();
   showToast(`Moved ${entry.name} to ${destination}`);
 }
 
@@ -3352,10 +3806,12 @@ function filesSaveOrUpdateFile(path, name, content, mime = "text/plain") {
     existing.content = content;
     existing.size = size;
     existing.mime = mime;
+    saveFilesTreeToStorage();
     return;
   }
 
   entries.push({ name, type: "file", size, content, mime });
+  saveFilesTreeToStorage();
 }
 
 function initializeFilesExplorer() {
@@ -3469,7 +3925,7 @@ function initializeFilesExplorer() {
     }
 
     for (const file of files) {
-      const textContent = file.type.startsWith("text/") ? await file.text() : "";
+      const textContent = file.type.startsWith("text/") ? await file.text() : await fileToDataUrl(file);
       let name = file.name;
       if (filesHasName(filesState.currentPath, name)) {
         const dotIndex = file.name.lastIndexOf(".");
@@ -3490,6 +3946,7 @@ function initializeFilesExplorer() {
     }
 
     renderFilesGrid();
+    saveFilesTreeToStorage();
     showToast(`Uploaded ${files.length} file${files.length === 1 ? "" : "s"}`);
   });
 
@@ -3543,14 +4000,10 @@ function initializeFilesExplorer() {
 
     const isInsideDropdown = target.closest("#filesMenuDropdown");
     const isFileButton = target.closest("#filesFileMenuButton");
-    if (target.closest("button, input, select, textarea, a")) {
+    if (!isInsideDropdown && !isFileButton && !target.closest("button, input, select, textarea, a")) {
+      setFilesDropdownVisible(false);
     }
   });
-
-    const dragHandle = target.closest("[data-widget-id]");
-    if (!(dragHandle instanceof HTMLElement)) {
-      return;
-    }
 }
 
 const codeState = {
