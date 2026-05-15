@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Plasma Desktop</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="desktop" id="desktopRoot">
+      <div id="loginGate" class="login-gate" aria-label="Sign in">
+        <div class="login-card">
+          <div class="login-center">
+            <div class="login-avatar-shell" aria-hidden="true">
+              <div class="login-avatar-icon"></div>
+            </div>
+            <h1 id="loginTitle">User Name</h1>
+            <p id="loginSubtitle">Select your account to continue.</p>
+            <button id="loginEnterButton" type="button" class="action-button primary">Sign In</button>
+          </div>
+
+          <div class="login-bottom-row">
+            <div class="login-user-panel">
+              <div id="loginSelectSection" class="login-section" hidden>
+                <label>
+                  <span>Account</span>
+                  <select id="loginUserSelect"></select>
+                </label>
+                <div class="login-actions">
+                  <button id="loginAddUserButton" type="button" class="action-button">New Account</button>
+                </div>
+              </div>
+              <div id="loginCreateSection" class="login-section">
+                <label>
+                  <span>Username</span>
+                  <input id="loginUsernameInput" type="text" maxlength="24" placeholder="Create username" />
+                </label>
+                <div class="login-actions">
+                  <button id="loginCreateButton" type="button" class="action-button primary">Create & Sign In</button>
+                  <button id="loginBackButton" type="button" class="action-button" hidden>Back</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="login-system-tray" aria-hidden="true">
+              <span>◌</span>
+              <span>◐</span>
+              <span>⏻</span>
+            </div>
+          </div>
+
+          <div id="loginCloudStatus" class="login-cloud-status" role="status" aria-live="polite">Cloud sync: Local mode</div>
+        </div>
+      </div>
+      <div class="wallpaper" aria-hidden="true"></div>
+      <div class="desktop-glow"></div>
+      <div class="desktop-glow alt"></div>
+      <div id="desktopShortcuts" class="desktop-shortcuts" aria-label="Desktop shortcuts"></div>
+      <div id="desktopWidgetHost" class="desktop-widget-host" aria-label="Desktop widgets"></div>
+
+      <aside class="launcher-menu" id="launcherMenu" aria-label="Application launcher">
+        <div class="launcher-top">
+          <div class="launcher-user">
+            <div class="launcher-avatar" aria-hidden="true">L</div>
+            <div>
+              <strong id="sessionUsernameLabel">Linuxiac</strong>
+              <span>Plasma session</span>
+            </div>
+          </div>
+          <div class="launcher-search">
+            <span aria-hidden="true">⌕</span>
+            <input id="launcherSearchInput" type="text" aria-label="Search applications" placeholder="Search..." />
+          </div>
+        </div>
+        <div class="launcher-body">
+          <nav class="launcher-categories" aria-label="Categories">
+            <button type="button" class="launcher-category active" data-category="Favorites">Favorites</button>
+            <button type="button" class="launcher-category" data-category="All Applications">All Applications</button>
+            <button type="button" class="launcher-category" data-category="Development">Development</button>
+            <button type="button" class="launcher-category" data-category="Education">Education</button>
+            <button type="button" class="launcher-category" data-category="Apps">Apps</button>
+            <button type="button" class="launcher-category" data-category="Graphics">Graphics</button>
+            <button type="button" class="launcher-category" data-category="Internet">Internet</button>
+            <button type="button" class="launcher-category" data-category="Multimedia">Multimedia</button>
+            <button type="button" class="launcher-category" data-category="Office">Office</button>
+            <button type="button" class="launcher-category" data-category="Settings">Settings</button>
+            <button type="button" class="launcher-category" data-category="System">System</button>
+            <button type="button" class="launcher-category" data-category="Utilities">Utilities</button>
+          </nav>
+          <section class="launcher-grid" aria-label="Favorites">
+            <button type="button" class="launcher-tile" data-app-name="System Settings" data-open-window="settingsWindow">
+              <span>⚙</span>
+              <strong>System Settings</strong>
+            </button>
+            <button type="button" class="launcher-tile" data-app-name="Terminal" data-open-window="terminalWindow">
+              <span>▣</span>
+              <strong>Terminal</strong>
+            </button>
+            <button type="button" class="launcher-tile" data-app-name="Launcher" data-open-window="launcherInfoWindow">
+              <span>⌘</span>
+              <strong>Launcher</strong>
+            </button>
+            <button type="button" class="launcher-tile" data-app-name="Files" data-open-window="filesWindow">
+              <span>🗀</span>
+              <strong>Files</strong>
+            </button>
+            <button type="button" class="launcher-tile" data-app-name="Browser" data-open-window="browserWindow">
+              <span>🌐</span>
+              <strong>Browser</strong>
+            </button>
+            <button type="button" class="launcher-tile" data-app-name="MP3 Player" data-open-window="mp3Window">
+              <span>♫</span>
+              <strong>MP3 Player</strong>
+            </button>
+            <button type="button" class="launcher-tile" data-app-name="Widgets" data-open-window="widgetsWindow">
+              <span>▦</span>
+              <strong>Widgets</strong>
+            </button>
+            <button type="button" class="launcher-tile" data-app-name="Utilities" data-open-window="fetchWindow">
+              <span>☰</span>
+              <strong>Utilities</strong>
+            </button>
+            <button type="button" class="launcher-tile" data-app-name="Code Studio" data-open-window="codeWindow">
+              <span>⌬</span>
+              <strong>Code Studio</strong>
+            </button>
+          </section>
+        </div>
+        <div class="launcher-footer">
+          <button id="footerApplications" type="button">Applications</button>
+          <button id="footerPlaces" type="button">Places</button>
+          <button id="footerSleep" type="button">Sleep</button>
+          <button id="footerRestart" type="button">Restart</button>
+          <button id="footerShutdown" type="button">Shut Down</button>
+        </div>
+      </aside>
+
+      <section class="window app-window settings-window" id="settingsWindow" aria-label="Settings">
+        <header class="window-header">
+          <div class="window-title">
+            <span class="window-icon">⚙</span>
+            <div>
+              <strong>Settings</strong>
+              <span>Theme editor</span>
+            </div>
+          </div>
+          <button class="window-close" type="button" data-close-window="settingsWindow" aria-label="Close settings">×</button>
+        </header>
+        <div class="window-body">
+          <section class="card card-highlight">
+            <div class="card-heading">Theme Editor</div>
+            <p>Customize the desktop colors first. These values update the shell live and can be expanded later.</p>
+            <div class="theme-grid">
+              <label>
+                <span>Accent</span>
+                <input id="accentColor" type="color" value="#d9d9d9" />
+              </label>
+              <label>
+                <span>Accent 2</span>
+                <input id="accent2Color" type="color" value="#9d9d9d" />
+              </label>
+              <label>
+                <span>Background 1</span>
+                <input id="bg1Color" type="color" value="#2a2a2a" />
+              </label>
+              <label>
+                <span>Background 2</span>
+                <input id="bg2Color" type="color" value="#464646" />
+              </label>
+              <label>
+                <span>Panel opacity</span>
+                <input id="panelOpacity" type="range" min="0.45" max="0.95" step="0.01" value="0.68" />
+              </label>
+              <label>
+                <span>Glass opacity</span>
+                <input id="glassOpacity" type="range" min="0.5" max="1" step="0.01" value="0.82" />
+              </label>
+            </div>
+            <div class="action-row">
+              <button class="action-button primary" type="button" id="applyThemeButton">Apply theme</button>
+              <button class="action-button" type="button" id="resetThemeButton">Reset defaults</button>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="card-heading">Desktop options</div>
+            <div class="option-list">
+              <label class="toggle-row">
+                <span>Show wallpaper glow</span>
+                <input id="glowToggle" type="checkbox" checked />
+              </label>
+              <label class="toggle-row">
+                <span>Use compact panel</span>
+                <input id="compactPanelToggle" type="checkbox" />
+              </label>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="window app-window terminal-window" id="terminalWindow" aria-label="Terminal">
+        <header class="window-header">
+          <div class="window-title">
+            <span class="window-icon">▣</span>
+            <div>
+              <strong>Terminal</strong>
+              <span>Command line</span>
+            </div>
+          </div>
+          <button class="window-close" type="button" data-close-window="terminalWindow" aria-label="Close terminal">×</button>
+        </header>
+        <div class="window-body terminal-body">
+          <div id="terminalOutput" class="terminal-output" aria-live="polite"></div>
+          <form id="terminalForm" class="terminal-form">
+            <span class="terminal-prompt">plasma@desktop:~$</span>
+            <input id="terminalInput" type="text" autocomplete="off" spellcheck="false" placeholder="type help and press enter" />
+          </form>
+        </div>
+      </section>
+
+      <section class="window app-window browser-window" id="browserWindow" aria-label="Browser">
+        <div class="window-body browser-body">
+          <div class="browser-tabs-bar window-drag-handle">
+            <div class="browser-window-meta" aria-hidden="true">
+              <span class="browser-window-icon">🌐</span>
+              <span class="browser-window-label">Browser</span>
+            </div>
+            <div id="browserTabsList" class="browser-tabs-list"></div>
+            <button id="browserAddTabButton" type="button" class="browser-add-tab-button" title="New tab">+</button>
+            <div class="browser-window-actions">
+              <button id="browserMinimizeButton" class="window-minimize compact-window-action" type="button" aria-label="Minimize browser">—</button>
+              <button id="browserCloseButton" class="window-close compact-window-action" type="button" data-close-window="browserWindow" aria-label="Close browser">×</button>
+            </div>
+          </div>
+          <form id="browserForm" class="browser-form">
+            <button id="browserBackButton" type="button" class="action-button" aria-label="Back">←</button>
+            <button id="browserForwardButton" type="button" class="action-button" aria-label="Forward">→</button>
+            <input
+              id="browserInput"
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="Search or enter address"
+            />
+            <button type="submit" class="action-button primary">Go</button>
+          </form>
+          <div id="browserHint" class="browser-hint">Browser mode uses a secure mirror for site loading.</div>
+          <iframe id="browserFrame" class="browser-frame" title="Browser view" referrerpolicy="no-referrer"></iframe>
+        </div>
+      </section>
+
+      <section class="window app-window fetch-window" id="fetchWindow" aria-label="Fetch">
+        <header class="window-header">
+          <div class="window-title">
+            <span class="window-icon">◈</span>
+            <div>
+              <strong>Fetch</strong>
+              <span>Neofetch-style system view</span>
+            </div>
+          </div>
+          <button class="window-close" type="button" data-close-window="fetchWindow" aria-label="Close fetch">×</button>
+        </header>
+        <div class="window-body fetch-body">
+          <pre id="fetchScreen" class="fetch-screen" aria-label="Neofetch output"></pre>
+        </div>
+      </section>
+
+      <section class="window app-window mp3-window" id="mp3Window" aria-label="MP3 Player">
+        <header class="window-header">
+          <div class="window-title">
+            <span class="window-icon">♫</span>
+            <div>
+              <strong>MP3 Player</strong>
+              <span>Play local tracks and visualize audio</span>
+            </div>
+          </div>
+          <button class="window-close" type="button" data-close-window="mp3Window" aria-label="Close MP3 player">×</button>
+        </header>
+        <div class="window-body mp3-body">
+          <audio id="mp3AudioElement" preload="metadata"></audio>
+          <input id="mp3FileInput" type="file" accept="audio/*" hidden />
+          <div class="mp3-top-row">
+            <button id="mp3PlayButton" type="button" class="action-button primary" aria-label="Play or pause">▶</button>
+            <input id="mp3Timeline" type="range" min="0" max="1000" value="0" aria-label="Track timeline" />
+            <span id="mp3TimeLabel" class="mp3-time-label">00:00 / 00:00</span>
+          </div>
+          <div class="mp3-second-row">
+            <button id="mp3LoadButton" type="button" class="action-button">Load MP3</button>
+            <span id="mp3TrackLabel" class="mp3-track-label">No track loaded</span>
+            <span id="mp3ModeLabel" class="mp3-mode-chip">mode: mp3</span>
+          </div>
+          <canvas id="mp3VisualizerCanvas" class="mp3-visualizer" width="640" height="140" aria-label="Music visualizer"></canvas>
+        </div>
+      </section>
+
+      <section class="window app-window widgets-window" id="widgetsWindow" aria-label="Widgets">
+        <header class="window-header">
+          <div class="window-title">
+            <span class="window-icon">▦</span>
+            <div>
+              <strong>Widgets</strong>
+              <span>Desktop widget manager</span>
+            </div>
+          </div>
+          <button class="window-close" type="button" data-close-window="widgetsWindow" aria-label="Close widgets">×</button>
+        </header>
+        <div class="window-body simple-list-body widgets-body">
+          <div class="simple-list-title">Toggle desktop widgets</div>
+          <button type="button" class="action-button" data-widget-toggle="clock">Clock Widget</button>
+          <button type="button" class="action-button" data-widget-toggle="player">Now Playing Widget</button>
+          <button type="button" class="action-button" data-widget-toggle="fetch">Fetch Widget</button>
+          <button type="button" class="action-button" data-widget-toggle="ascii">ASCII Animation Widget</button>
+          <button type="button" class="action-button" data-widget-edit="on">Enter Widget Edit Mode</button>
+          <p>Sound Scope is terminal-only. Use command: <strong>soundmode on</strong></p>
+          <p id="terminalWidgetEditHint">Widget edit terminal command: <strong>widget edit on|off|status</strong></p>
+        </div>
+      </section>
+
+      <section class="window app-window sound-scope-window" id="soundScopeWindow" aria-label="Sound Scope">
+        <header class="window-header">
+          <div class="window-title">
+            <span class="window-icon">◉</span>
+            <div>
+              <strong>Sound Scope</strong>
+              <span>Terminal-only browser audio visualizer mode</span>
+            </div>
+          </div>
+          <button class="window-close" type="button" data-close-window="soundScopeWindow" aria-label="Close sound scope">×</button>
+        </header>
+        <div class="window-body sound-scope-body">
+          <div id="soundScopeStatus" class="simple-list-title">Awaiting terminal command: soundmode on</div>
+          <canvas id="soundScopeCanvas" class="mp3-visualizer" width="640" height="180" aria-label="Browser audio visualizer"></canvas>
+        </div>
+      </section>
+
+      <section class="window app-window files-window" id="filesWindow" aria-label="Files">
+        <header class="window-header">
+          <div class="window-title">
+            <span class="window-icon">🗀</span>
+            <div>
+              <strong>Files</strong>
+              <span>Home directory</span>
+            </div>
+          </div>
+          <button class="window-close" type="button" data-close-window="filesWindow" aria-label="Close files">×</button>
+        </header>
+        <div class="window-body files-body">
+          <div class="files-shell" role="application" aria-label="Dolphin style file manager">
+            <div class="files-menubar">
+              <button id="filesFileMenuButton" type="button" data-files-menu="file" aria-expanded="false">File</button>
+              <button type="button" data-files-menu="edit">Edit</button>
+              <button type="button" data-files-menu="view">View</button>
+              <button type="button" data-files-menu="go">Go</button>
+              <button type="button" data-files-menu="tools">Tools</button>
+              <button type="button" data-files-menu="settings">Settings</button>
+              <button type="button" data-files-menu="help">Help</button>
+            </div>
+            <div id="filesMenuDropdown" class="files-menu-dropdown" hidden>
+              <button id="filesMenuNewFolder" type="button">New Folder</button>
+              <button id="filesMenuNewFolderNamed" type="button">New Folder (Named)</button>
+              <button id="filesMenuNewFile" type="button">New Text File</button>
+              <button id="filesMenuUploadFile" type="button">Upload File(s)</button>
+              <button id="filesMenuRename" type="button">Rename Selected</button>
+              <button id="filesMenuMove" type="button">Move Selected...</button>
+              <button id="filesMenuDelete" type="button">Delete Selected</button>
+            </div>
+            <div class="files-toolbar">
+              <button id="filesBackButton" type="button" class="mini" aria-label="Back">←</button>
+              <button id="filesForwardButton" type="button" class="mini" aria-label="Forward">→</button>
+              <button id="filesUpButton" type="button" class="mini" aria-label="Up">↑</button>
+              <input id="filesPathInput" type="text" value="/home/plasma" aria-label="Current path" />
+              <input id="filesFindInput" type="text" class="mini-input" placeholder="Find..." aria-label="Find folders" />
+              <button id="filesPreviewButton" type="button" class="mini">Preview</button>
+              <button id="filesSplitButton" type="button" class="mini">Split</button>
+            </div>
+            <div class="files-main">
+              <aside class="files-sidebar" aria-label="Places">
+                <div class="sidebar-title">Places</div>
+                <div id="filesSidebarList"></div>
+              </aside>
+              <section class="files-content" aria-label="Directory contents">
+                <div id="folderGrid" class="folder-grid"></div>
+                <aside id="filesPreviewPanel" class="files-preview-panel" aria-label="Preview panel"></aside>
+              </section>
+            </div>
+            <div class="files-statusbar">
+              <span id="filesStatusLeft">ready</span>
+              <span id="filesStatusRight">0 items</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="window app-window code-window" id="codeWindow" aria-label="Code Studio">
+        <header class="window-header">
+          <div class="window-title">
+            <span class="window-icon">⌬</span>
+            <div>
+              <strong>Code Studio</strong>
+              <span>Run and test code</span>
+            </div>
+          </div>
+          <button class="window-close" type="button" data-close-window="codeWindow" aria-label="Close code studio">×</button>
+        </header>
+        <div class="window-body code-body">
+          <div class="code-tabs-bar">
+            <div class="code-tabs-list" id="codeTabsList">
+              <button type="button" class="code-tab active" data-tab-id="web-1" data-tab-type="web" data-tab-num="1">
+                <span>Web 1</span>
+                <span class="code-tab-close" aria-label="Close tab">×</span>
+              </button>
+              <button type="button" class="code-tab" data-tab-id="js-1" data-tab-type="javascript" data-tab-num="1">
+                <span>JS 1</span>
+                <span class="code-tab-close" aria-label="Close tab">×</span>
+              </button>
+            </div>
+            <button id="codeAddTabButton" type="button" class="code-add-tab-button" title="Add new tab">+</button>
+            <button id="codeCloneButton" type="button" class="code-clone-button">⇓ Clone</button>
+          </div>
+          <div class="code-toolbar">
+            <button id="codeUndoButton" type="button" class="action-button" title="Undo (Ctrl+Z)">↶ Undo</button>
+            <button id="codeRedoButton" type="button" class="action-button" title="Redo (Ctrl+Y)">↷ Redo</button>
+            <label>
+              <span>Language</span>
+              <select id="codeLanguageSelect">
+                <option value="javascript">JavaScript</option>
+                <option value="html">HTML</option>
+                <option value="css">CSS</option>
+                <option value="python">Python</option>
+                <option value="typescript">TypeScript</option>
+                <option value="rust">Rust</option>
+                <option value="c">C</option>
+                <option value="cpp">C++</option>
+                <option value="java">Java</option>
+              </select>
+            </label>
+            <label>
+              <span>File name</span>
+              <input id="codeFileNameInput" type="text" value="main.js" />
+            </label>
+            <button id="codeNewButton" type="button" class="action-button">New</button>
+            <button id="codeSaveButton" type="button" class="action-button">Save As...</button>
+            <button id="codeRunButton" type="button" class="action-button primary">Run</button>
+          </div>
+          <div class="code-editor-tabs">
+            <div class="code-subtab-bar" id="webSubtabs">
+              <button type="button" class="code-subtab active" data-subtab="html">HTML</button>
+              <button type="button" class="code-subtab" data-subtab="css">CSS</button>
+              <button type="button" class="code-subtab" data-subtab="js">JavaScript</button>
+            </div>
+          </div>
+          <div class="code-main-grid">
+            <section class="code-editor-panel">
+              <textarea id="codeEditor" spellcheck="false"></textarea>
+            </section>
+            <section class="code-output-panel">
+              <div class="code-output-header">Output Preview</div>
+              <pre id="codeOutputText" class="code-output-text"></pre>
+              <iframe id="codeOutputFrame" class="code-output-frame" sandbox="allow-scripts"></iframe>
+            </section>
+          </div>
+          <section class="code-terminal-panel">
+            <div class="code-output-header">Code Terminal</div>
+            <div id="codeTerminalOutput" class="code-terminal-output" aria-live="polite"></div>
+            <form id="codeTerminalForm" class="terminal-form code-terminal-form">
+              <span class="terminal-prompt">code@studio:~$</span>
+              <input id="codeTerminalInput" type="text" autocomplete="off" spellcheck="false" placeholder="run, ls, cd, cat, save, run, lang, clear" />
+            </form>
+          </section>
+        </div>
+      </section>
+
+      <section class="window app-window places-window" id="placesWindow" aria-label="Places">
+        <header class="window-header">
+          <div class="window-title">
+            <span class="window-icon">⌂</span>
+            <div>
+              <strong>Places</strong>
+              <span>Common locations</span>
+            </div>
+          </div>
+          <button class="window-close" type="button" data-close-window="placesWindow" aria-label="Close places">×</button>
+        </header>
+        <div class="window-body simple-list-body">
+          <div class="simple-list-title">Bookmarks</div>
+          <button type="button" class="action-button">Home</button>
+          <button type="button" class="action-button">Desktop</button>
+          <button type="button" class="action-button">Documents</button>
+          <button type="button" class="action-button">Network</button>
+          <button type="button" class="action-button">Trash</button>
+        </div>
+      </section>
+
+      <section class="window app-window save-picker-window" id="savePickerWindow" aria-label="Save file">
+        <header class="window-header">
+          <div class="window-title">
+            <span class="window-icon">💾</span>
+            <div>
+              <strong>Save File</strong>
+              <span>Choose destination folder</span>
+            </div>
+          </div>
+          <button class="window-close" type="button" data-close-window="savePickerWindow" aria-label="Close save picker">×</button>
+        </header>
+        <div class="window-body save-picker-body">
+          <div class="save-picker-shell">
+            <div class="save-picker-toolbar">
+              <button id="savePickerBackButton" type="button" class="mini" aria-label="Back">←</button>
+              <button id="savePickerUpButton" type="button" class="mini" aria-label="Up">↑</button>
+              <input id="savePickerPathInput" type="text" value="/home/plasma" aria-label="Current path" />
+            </div>
+            <div class="save-picker-main">
+              <div id="savePickerGrid" class="folder-grid"></div>
+            </div>
+            <div class="save-picker-footer">
+              <input id="savePickerFileNameInput" type="text" placeholder="Enter file name..." />
+              <button id="savePickerCancelButton" type="button" class="action-button">Cancel</button>
+              <button id="savePickerConfirmButton" type="button" class="action-button primary">Save</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="window app-window git-clone-window" id="gitCloneWindow" aria-label="Clone from Git">
+        <header class="window-header">
+          <div class="window-title">
+            <span class="window-icon">⎇</span>
+            <div>
+              <strong>Clone from Git</strong>
+              <span>Import project from GitHub or Git URL</span>
+            </div>
+          </div>
+          <button class="window-close" type="button" data-close-window="gitCloneWindow" aria-label="Close git clone">×</button>
+        </header>
+        <div class="window-body git-clone-body">
+          <div class="git-clone-form">
+            <label>
+              <span>Git Repository URL</span>
+              <input id="gitUrlInput" type="text" placeholder="https://github.com/user/repo" />
+            </label>
+            <label>
+              <span>File Type to Load</span>
+              <select id="gitFileTypeSelect">
+                <option value="javascript">JavaScript</option>
+                <option value="html">HTML</option>
+                <option value="css">CSS</option>
+                <option value="python">Python</option>
+                <option value="typescript">TypeScript</option>
+                <option value="json">JSON</option>
+                <option value="markdown">Markdown</option>
+              </select>
+            </label>
+            <button id="gitFetchButton" type="button" class="action-button primary">Fetch Files</button>
+          </div>
+          <div id="gitPreviewContainer" class="git-preview-container" style="display: none;">
+            <div class="git-preview-header">Select files to load:</div>
+            <div id="gitFileList" class="git-file-list"></div>
+            <div class="git-preview-actions">
+              <button id="gitLoadButton" type="button" class="action-button primary">Load Selected</button>
+              <button id="gitBackButton" type="button" class="action-button">Back</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="window app-window launcher-info-window" id="launcherInfoWindow" aria-label="Launcher">
+        <header class="window-header">
+          <div class="window-title">
+            <span class="window-icon">⌘</span>
+            <div>
+              <strong>Launcher</strong>
+              <span>Application overview</span>
+            </div>
+          </div>
+          <button class="window-close" type="button" data-close-window="launcherInfoWindow" aria-label="Close launcher info">×</button>
+        </header>
+        <div class="window-body simple-list-body">
+          <div class="simple-list-title">Launcher shortcuts</div>
+          <p>Use categories on the left, search at the top, and footer actions for Places and Power controls.</p>
+          <button type="button" class="action-button" data-open-window="terminalWindow">Open Terminal</button>
+          <button type="button" class="action-button" data-open-window="fetchWindow">Open Fetch</button>
+          <button type="button" class="action-button" data-open-window="mp3Window">Open MP3 Player</button>
+          <button type="button" class="action-button" data-open-window="widgetsWindow">Open Widgets</button>
+        </div>
+      </section>
+
+      <div class="panel-faint" aria-hidden="true"></div>
+
+      <nav class="panel" aria-label="Desktop panel">
+        <button class="launcher" type="button" id="launcherButton" aria-label="Application Launcher">⌂</button>
+        <div id="taskbarPins" class="taskbar-pins" aria-label="Taskbar apps"></div>
+        <span class="panel-spacer" aria-hidden="true"></span>
+        <span id="clock" class="clock" aria-label="Clock">--:--</span>
+      </nav>
+
+      <div id="appContextMenu" class="app-context-menu" hidden>
+        <button type="button" id="ctxOpenApp">Open</button>
+        <button type="button" id="ctxDesktopAction">Add desktop shortcut</button>
+        <button type="button" id="ctxTaskbarAction">Pin to taskbar</button>
+      </div>
+
+      <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="false"></div>
+      <div id="powerOverlay" class="power-overlay" aria-hidden="true">
+        <div class="power-card">
+          <strong id="powerOverlayTitle">Sleeping</strong>
+          <p id="powerOverlayText">Press any key to wake.</p>
+          <button id="powerOverlayButton" type="button" class="action-button primary">Power On</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

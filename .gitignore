@@ -1,0 +1,16 @@
+node_modules/
+scramjet/node_modules/
+**/node_modules/
+
+scramjet/.tmp-prebuilt/
+**/.tmp-prebuilt/
+**/dist/
+**/out/
+**/build/
+**/coverage/
+**/temp/
+**/.cache/
+
+*.log
+.DS_Store
+Thumbs.db
