@@ -2176,6 +2176,13 @@ function showLoginSelect(users) {
   }
 
   loginUserSelect.innerHTML = "";
+  const placeholderOption = document.createElement("option");
+  placeholderOption.value = "";
+  placeholderOption.textContent = "Select account...";
+  placeholderOption.disabled = true;
+  placeholderOption.selected = true;
+  loginUserSelect.appendChild(placeholderOption);
+
   users.forEach((username) => {
     const option = document.createElement("option");
     option.value = username;
@@ -2186,7 +2193,9 @@ function showLoginSelect(users) {
   if (loginSubtitle) {
     loginSubtitle.textContent = "Select your account to continue.";
   }
-  syncLoginTitleToSelectedUser();
+  if (loginTitle) {
+    loginTitle.textContent = "User Name";
+  }
 
   if (loginAddUserButton) {
     loginAddUserButton.hidden = users.length >= maxUsers;
@@ -2262,6 +2271,13 @@ async function initializeLoginGate() {
 
   loginUserSelect?.addEventListener("change", () => {
     syncLoginTitleToSelectedUser();
+  });
+
+  loginAddUserButton?.addEventListener("click", () => {
+    if (loginUsernameInput) {
+      loginUsernameInput.value = "";
+    }
+    showLoginCreate(true);
   });
 
   loginBackButton?.addEventListener("click", () => {
